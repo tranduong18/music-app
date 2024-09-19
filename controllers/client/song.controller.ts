@@ -4,7 +4,7 @@ import Song from "../../models/song.model";
 import Singer from "../../models/singer.model";
 import FavoriteSong from "../../models/favorite-song.model";
 
-// [GET] /songs/:slugTopic
+// [GET] /songs/topic/:slugTopic
 export const list = async (req: Request, res: Response) => {
     const slugTopic: string = req.params.slugTopic;
 
@@ -104,7 +104,7 @@ export const like = async (req: Request, res: Response) => {
 }
 
 // [PATCH] /songs/favorite
-export const favorite = async (req: Request, res: Response) => {
+export const favoritePatch = async (req: Request, res: Response) => {
     const { id } = req.body;
 
     const data = {
@@ -128,5 +128,30 @@ export const favorite = async (req: Request, res: Response) => {
     res.json({
         code: 200,
         status: status
+    })
+}
+
+// [GET] /songs/favorite
+export const favorite = async (req: Request, res: Response) => {
+    const songs = await FavoriteSong.find({
+        // userId: res.locals.user.id
+    });
+
+    for(const song of songs){
+        const infoSong = await Song.findOne({
+            _id: song.songId
+        }).select("title avatar singerId slug");
+
+        const infoSinger = await Singer.findOne({
+            _id: infoSong.singerId
+        }).select("fullName");
+
+        song["infoSong"] = infoSong;
+        song["infoSinger"] = infoSinger;
+    }
+
+    res.render("client/pages/songs/favorite", {
+        pageTitle: "Bài hát yêu thích",
+        songs: songs
     })
 }
