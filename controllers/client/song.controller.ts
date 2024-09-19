@@ -157,11 +157,13 @@ export const favorite = async (req: Request, res: Response) => {
     })
 }
 
-// [GET] /songs/search
+// [GET] /songs/search/:type
 export const search = async (req: Request, res: Response) => {
+    const type = req.params.type;
+
     const keyword = `${req.query.keyword}`;
 
-    let songs = [];
+    let songsFinal = [];
 
     if(keyword){
         let keywordSlug = keyword.trim();
@@ -169,13 +171,10 @@ export const search = async (req: Request, res: Response) => {
         keywordSlug = keywordSlug.replace(/-+/g, "-");
         keywordSlug = unidecode(keywordSlug);
 
-        console.log(keyword);
-        console.log(keywordSlug);
-
         const regexKeyword = new RegExp(keyword, "i");
         const regexKeywordSlug = new RegExp(keywordSlug, "i");
 
-        songs = await Song.find({
+        const songs = await Song.find({
             $or:[
                 { title : regexKeyword },
                 { slug : regexKeywordSlug }
@@ -189,13 +188,35 @@ export const search = async (req: Request, res: Response) => {
                 _id: item.singerId
             }).select("fullName");
 
-            item["singerFullName"] = singerInfo["fullName"];
+            const itemFinal = {
+                title: item.title,
+                avatar: item.avatar,
+                singerId: item.singerId,
+                like: item.like,
+                slug: item.slug,
+                singerFullName: singerInfo["fullName"]
+            };
+
+            songsFinal.push(itemFinal);
         }
     }
 
-    res.render("client/pages/songs/list", {
-        pageTitle: "Kết quả tìm kiếm: " + keyword,
-        keyword: keyword,
-        songs: songs
-    });
+    if(type == "result"){
+        res.render("client/pages/songs/list", {
+            pageTitle: "Kết quả tìm kiếm: " + keyword,
+            keyword: keyword,
+            songs: songsFinal
+        });
+    }
+    else if(type == "suggest"){
+        res.json({
+            code: 200,
+            songs: songsFinal
+        });
+    }
+    else{
+        res.json({
+            code: 400
+        })
+    }
 }
