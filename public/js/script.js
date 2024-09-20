@@ -26,6 +26,19 @@ if(aplayer) {
   ap.on('play', function () {
     avatar.style.animationPlayState = "running";
     avatar2.style.animationPlayState = "running";
+
+    setTimeout(() => {
+      ap.on("ended", function () {
+        fetch(`/songs/listen/${dataSong._id}`)
+          .then(res => res.json())
+          .then(data => {
+            if(data.code == 200){
+              const innerNumberListen = document.querySelector(".singer-detail .inner-listen .inner-number");
+              innerNumberListen.innerHTML = data.listen;
+            }
+          }) 
+      })
+    }, ap.audio.duration*4/5 * 1000);
   });
 
   ap.on('pause', function () {
