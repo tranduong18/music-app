@@ -86,7 +86,10 @@ export const editPatch = async (req: Request, res: Response) => {
         req.body.audio = req.body.audio[0];
     }
 
-    console.log(req.body);
+    await Song.updateOne({
+        _id: id,
+        deleted: false
+    }, req.body);
 
     res.redirect("back");
 }
